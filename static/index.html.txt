@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sudoku Game</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <h1>Sudoku Game</h1>
+  <div id="board"></div>
+  <button id="solveButton">Solve</button>
+  <script>
+    const boardDiv = document.getElementById('board');
+
+    function createBoard(board) {
+      boardDiv.innerHTML = '';
+      board.forEach((row, rowIndex) => {
+        const rowDiv = document.createElement('div');
+        rowDiv.className = 'row';
+        row.forEach((cell, cellIndex) => {
+          const cellDiv = document.createElement('input');
+          cellDiv.type = 'text';
+          cellDiv.className = 'cell';
+          cellDiv.value = cell === 0 ? '' : cell;
+          cellDiv.maxLength = 1;
+          cellDiv.dataset.row = rowIndex;
+          cellDiv.dataset.col = cellIndex;
+          rowDiv.appendChild(cellDiv);
+        });
+        boardDiv.appendChild(rowDiv);
+      });
+    }
+
+    function getBoard() {
+      const board = [];
+      document.querySelectorAll('.row').forEach(rowDiv => {
+        const row = [];
+        rowDiv.querySelectorAll('.cell').forEach(cellDiv => {
+          const value = cellDiv.value;
+          row.push(value === '' ? 0 : parseInt(value));
+        });
+        board.push(row);
+      });
+      return board;
+    }
+
+    fetch('/board')
+      .then(response => response.json())
+      .then(board => createBoard(board));
+
+    document.getElementById('solveButton').addEventListener('click', () => {
+      const board = getBoard();
+      fetch('/solve', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ board })
+      })
+      .then(response => response.json())
+      .then(solvedBoard => {
+        if (typeof solvedBoard === 'string') {
+          alert(solvedBoard);
+        } else {
+          createBoard(solvedBoard);
+        }
+      });
+    });
+  </script>
+</body>
+</html>
